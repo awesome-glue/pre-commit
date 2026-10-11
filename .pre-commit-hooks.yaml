@@ -1,0 +1,8 @@
+---
+- id: gtk-noop
+  name: GTK No-op
+  description: No-op hook that always passes.
+  entry: gtk-noop
+  language: python
+  pass_filenames: false
+  always_run: true
