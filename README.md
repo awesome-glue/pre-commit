@@ -4,7 +4,7 @@ Pre-commit hooks for [AWS Glue Toolkit](https://github.com/awesome-glue/aws-glue
 
 ## Hooks
 
-- `gtk-noop`: No-op hook that always passes.
+- `gtk-sort-deps`: Sort dependencies under `[project]` and `[tool.aws-glue-toolkit]` in `pyproject.toml`.
 
 ## Usage
 
@@ -13,9 +13,9 @@ Add this to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/awesome-glue/pre-commit
-    rev: v0.1.0
+    rev: v0.0.0
     hooks:
-      - id: gtk-noop
+      - id: gtk-sort-deps
 ```
 
 ## License

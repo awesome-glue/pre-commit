@@ -10,13 +10,14 @@ init:
     uv run pre-commit install
 
 # Run pre-commit on all files.
-lint:
-    uv run pre-commit run --all-files
+lint *ARGS:
+    uv run pre-commit run {{ARGS}}
 
 # Run all tests.
 test *ARGS:
-    uv run pytest {{ARGS}}
+    uv run behave {{ARGS}}
 
 # Run tests with coverage report.
-test-cov:
-    uv run pytest --cov --cov-report=term-missing
+coverage *ARGS:
+    uv run coverage run -m behave {{ARGS}}
+    uv run coverage report --show-missing

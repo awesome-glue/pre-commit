@@ -30,7 +30,7 @@ classifiers = [
     "Topic :: Software Development :: Quality Assurance",
 ]
 dependencies = [
-    "pyyaml>=6.0.2",
+    "tomlkit>=0.15.1",
 ]
 
 [project.urls]
@@ -39,14 +39,17 @@ Issues = "https://github.com/awesome-glue/pre-commit/issues"
 Changelog = "https://github.com/awesome-glue/pre-commit/releases"
 
 [project.scripts]
-gtk-noop = "gtk_pre_commit.noop:main"
+gtk-sort-deps = "gtk_pre_commit.sort_deps:main"
 
 [dependency-groups]
 dev = [
+    "behave>=1.2.6",
+    "coverage>=7.6.0",
     "pre-commit>=4.2.0",
-    "pytest>=8.3.5",
-    "pytest-cov>=6.1.1",
 ]
+
+[tool.bandit]
+exclude_dirs = ["features"]
 
 [tool.bandit.try_except_pass]
 check_typed_exception = true
@@ -84,9 +87,6 @@ enable_error_code = [
     "unused-awaitable",
 ]
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-
 [tool.ruff]
 line-length = 79
 target-version = "py311"
@@ -105,8 +105,8 @@ ignore = [
 max-complexity = 5
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = [
-    "S101",  # pytest assert statements
+"features/**" = [
+    "S101",  # assert statements in behave steps
 ]
 
 [tool.ruff.lint.pylint]

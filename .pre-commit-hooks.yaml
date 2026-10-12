@@ -1,8 +1,10 @@
 ---
-- id: gtk-noop
-  name: GTK No-op
-  description: No-op hook that always passes.
-  entry: gtk-noop
+- id: gtk-sort-deps
+  name: GTK Sort Dependencies
+  description: >-
+    Sort dependencies under [project] and [tool.aws-glue-toolkit] in
+    pyproject.toml.
+  entry: gtk-sort-deps
   language: python
-  pass_filenames: false
-  always_run: true
+  files: (^|/)pyproject\.toml$
+  types: [toml]

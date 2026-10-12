@@ -42,7 +42,16 @@ repos:
       - id: ruff-format
       - id: ruff-check
 
-  # 5. Static security analysis
+  # 5. Type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v2.4.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - types-behave
+          - tomlkit
+
+  # 6. Static security analysis
   - repo: https://github.com/PyCQA/bandit
     rev: 1.9.4
     hooks:
