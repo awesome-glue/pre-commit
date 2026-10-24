@@ -1,6 +1,6 @@
 ---
 - id: gtk-sort-deps
-  name: GTK Sort Dependencies
+  name: "AWS Glue Toolkit: Sort Dependencies"
   description: >-
     Sort dependencies under [project] and [tool.aws-glue-toolkit] in
     pyproject.toml.
@@ -8,3 +8,15 @@
   language: python
   files: (^|/)pyproject\.toml$
   types: [toml]
+
+- id: gtk-check-build
+  name: "AWS Glue Toolkit: Check Build & Dependencies"
+  description: >-
+    Verify AWS Glue job configuration, runtime version, and dependency
+    resolution by checking that the job builds successfully. Requires
+    aws-glue-toolkit in additional_dependencies.
+  entry: gtk-check-build
+  language: python
+  files: (^|/)pyproject\.toml$
+  types: [toml]
+  require_serial: true

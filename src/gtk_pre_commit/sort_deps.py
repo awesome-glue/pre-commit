@@ -1,14 +1,15 @@
-"""Sort dependencies in pyproject.toml."""
+"""Sort dependencies in pyproject.toml for AWS Glue Toolkit projects."""
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
+from pathlib import Path
 
 import tomlkit
 from tomlkit.items import Array, Item
 from tomlkit.toml_document import TOMLDocument
 
-from gtk_pre_commit.cli import parse_files
+from gtk_pre_commit.utils import find_gtk_project_files, pre_commit_hook
 
-TARGET_PATHS: tuple[tuple[str, ...], ...] = (
+TARGET_KEY_PATHS: tuple[tuple[str, ...], ...] = (
     ("project", "dependencies"),
     ("tool", "aws-glue-toolkit", "dependencies"),
 )
@@ -21,7 +22,7 @@ TARGET_PATHS: tuple[tuple[str, ...], ...] = (
 
 def _iter_target_arrays(
     doc: TOMLDocument,
-    targets: Sequence[tuple[str, ...]] = TARGET_PATHS,
+    targets: Sequence[tuple[str, ...]] = TARGET_KEY_PATHS,
 ) -> Iterator[Array]:
     """Yield target dependency arrays found in the document.
 
@@ -33,9 +34,9 @@ def _iter_target_arrays(
         Target arrays found in the document.
 
     """
-    for path in targets:
+    for key_path in targets:
         node: TOMLDocument | Item | None = doc
-        for key in path:
+        for key in key_path:
             node = node.get(key) if isinstance(node, dict) else None
         if isinstance(node, Array):
             yield node
@@ -83,28 +84,38 @@ def sort_dependencies(content: str) -> str:
 # =============================================================================
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def _sort_file_dependencies(paths: Iterable[Path]) -> Iterator[Path]:
+    """Sort dependencies in target files, yielding each modified path.
+
+    Args:
+        paths: Sequence of file paths to process.
+
+    Yields:
+        Path of each file that was modified.
+
+    """
+    for path in paths:
+        original = path.read_text(encoding="utf-8")
+        if (sorted_content := sort_dependencies(original)) != original:
+            path.write_text(sorted_content, encoding="utf-8")
+            yield path
+
+
+@pre_commit_hook
+def main(_: Sequence[str], files: Sequence[str]) -> int:
     """Sort dependencies in target files and return an exit code.
 
     Args:
-        argv: Command-line arguments, or None to read sys.argv.
+        _: Forwarded CLI flags (unused).
+        files: Sequence of file paths to process.
 
     Returns:
-        0 if all files were sorted, or 1 if any file was modified.
+        0 if all files were sorted or ignored, or 1 if any file was modified.
 
     """
-    modified = False
+    fixed = list(_sort_file_dependencies(find_gtk_project_files(files)))
+    if not fixed:
+        return 0
 
-    for path in parse_files(argv):
-        # Format and compare
-        original_content = path.read_text(encoding="utf-8")
-        sorted_content = sort_dependencies(original_content)
-        if sorted_content == original_content:
-            continue
-
-        # Persist changes
-        path.write_text(sorted_content, encoding="utf-8")
-        print(f"Fixing {path}")  # noqa: T201
-        modified = True
-
-    return 1 if modified else 0
+    print(*(f"Fixing {path}" for path in fixed), sep="\n")  # noqa: T201
+    return 1

@@ -39,6 +39,7 @@ Issues = "https://github.com/awesome-glue/pre-commit/issues"
 Changelog = "https://github.com/awesome-glue/pre-commit/releases"
 
 [project.scripts]
+gtk-check-build = "gtk_pre_commit.check_build:main"
 gtk-sort-deps = "gtk_pre_commit.sort_deps:main"
 
 [dependency-groups]

@@ -11,6 +11,8 @@ Feature: Sort dependencies in pyproject.toml
           "z-pkg",
           "a-pkg",
       ]
+
+      [tool.aws-glue-toolkit]
       """
     When I run gtk-sort-deps on the file
     Then the file should be updated to:
@@ -20,8 +22,10 @@ Feature: Sort dependencies in pyproject.toml
           "a-pkg",
           "z-pkg",
       ]
+
+      [tool.aws-glue-toolkit]
       """
-    And the hook should exit with failure
+    And the hook should report that files were modified
 
   Scenario: Sort unsorted dependencies under [tool.aws-glue-toolkit]
     Given a pyproject.toml file with content:
@@ -41,7 +45,7 @@ Feature: Sort dependencies in pyproject.toml
           "boto3",
       ]
       """
-    And the hook should exit with failure
+    And the hook should report that files were modified
 
   Scenario: Sort dependencies in both [project] and [tool.aws-glue-toolkit]
     Given a pyproject.toml file with content:
@@ -61,7 +65,7 @@ Feature: Sort dependencies in pyproject.toml
       [tool.aws-glue-toolkit]
       dependencies = ["b-pkg", "y-pkg"]
       """
-    And the hook should exit with failure
+    And the hook should report that files were modified
 
   Scenario: Sort dependencies case-insensitively
     Given a pyproject.toml file with content:
@@ -73,6 +77,8 @@ Feature: Sort dependencies in pyproject.toml
           "aws-glue-toolkit",
           "Pillow",
       ]
+
+      [tool.aws-glue-toolkit]
       """
     When I run gtk-sort-deps on the file
     Then the file should be updated to:
@@ -84,10 +90,12 @@ Feature: Sort dependencies in pyproject.toml
           "Pillow",
           "requests",
       ]
-      """
-    And the hook should exit with failure
 
-  Scenario: Preserve comments and formatting during sorting
+      [tool.aws-glue-toolkit]
+      """
+    And the hook should report that files were modified
+
+  Scenario: Preserve inline comments and formatting during sorting
     Given a pyproject.toml file with content:
       """toml
       [project]
@@ -95,6 +103,8 @@ Feature: Sort dependencies in pyproject.toml
           "z-pkg>=1.0",  # comment for z
           "a-pkg",
       ]
+
+      [tool.aws-glue-toolkit]
       """
     When I run gtk-sort-deps on the file
     Then the file should be updated to:
@@ -104,8 +114,10 @@ Feature: Sort dependencies in pyproject.toml
           "a-pkg",
           "z-pkg>=1.0",  # comment for z
       ]
+
+      [tool.aws-glue-toolkit]
       """
-    And the hook should exit with failure
+    And the hook should report that files were modified
 
   Scenario: Leave already sorted dependencies unchanged
     Given a pyproject.toml file with content:
@@ -115,6 +127,8 @@ Feature: Sort dependencies in pyproject.toml
           "a-pkg",
           "z-pkg",
       ]
+
+      [tool.aws-glue-toolkit]
       """
     When I run gtk-sort-deps on the file
     Then the file content should remain unchanged
@@ -139,6 +153,31 @@ Feature: Sort dependencies in pyproject.toml
       [project]
       name = "my-job"
       version = "0.1.0"
+
+      [tool.aws-glue-toolkit]
+      """
+    When I run gtk-sort-deps on the file
+    Then the file content should remain unchanged
+    And the hook should exit with success
+
+  Scenario: Ignore projects that are not AWS Glue jobs
+    Given a pyproject.toml file with content:
+      """toml
+      [project]
+      dependencies = [
+          "z-pkg",
+          "a-pkg",
+      ]
+      """
+    When I run gtk-sort-deps on the file
+    Then the file content should remain unchanged
+    And the hook should exit with success
+
+  Scenario: Ignore pyproject.toml with malformed TOML content
+    Given a pyproject.toml file with content:
+      """toml
+      [project
+      invalid = toml syntax
       """
     When I run gtk-sort-deps on the file
     Then the file content should remain unchanged

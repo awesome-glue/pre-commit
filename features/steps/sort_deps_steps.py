@@ -1,29 +1,27 @@
 """Step definitions for sort_deps feature."""
 
-import tempfile
-from pathlib import Path
+import difflib
+from collections.abc import Sequence
 
-from behave import given, then, when
+from behave import then, when
 from behave.runner import Context
 
+from features.steps.common_steps import run_hook
 from gtk_pre_commit.sort_deps import main
 
 
-@given("a pyproject.toml file with content:")
-def step_given_pyproject(context: Context) -> None:
-    """Write the provided TOML content to pyproject.toml.
+def _run_sort_deps(context: Context, argv: Sequence[str]) -> None:
+    """Run gtk-sort-deps with captured I/O and store results on context.
 
     Args:
         context: The behave context object.
+        argv: Command-line arguments to pass to main.
 
     """
-    assert context.text is not None
-    temp_dir = tempfile.TemporaryDirectory()
-    context.add_cleanup(temp_dir.cleanup)
-    file_path = Path(temp_dir.name) / "pyproject.toml"
-    file_path.write_text(context.text, encoding="utf-8")
-    context.target_file = file_path
-    context.original_content = context.text
+    code, stdout, stderr = run_hook(main, argv)
+    context.exit_code = code
+    context.stdout = stdout
+    context.stderr = stderr
 
 
 @when("I run gtk-sort-deps on the file")
@@ -34,7 +32,7 @@ def step_when_run_on_file(context: Context) -> None:
         context: The behave context object.
 
     """
-    context.exit_code = main([str(context.target_file)])
+    _run_sort_deps(context, ["gtk-sort-deps", str(context.target_file)])
 
 
 @when("I run gtk-sort-deps with no arguments")
@@ -45,7 +43,7 @@ def step_when_run_no_args(context: Context) -> None:
         context: The behave context object.
 
     """
-    context.exit_code = main([])
+    _run_sort_deps(context, ["gtk-sort-deps"])
 
 
 @when("I run gtk-sort-deps on a non-existent file")
@@ -56,7 +54,7 @@ def step_when_run_non_existent(context: Context) -> None:
         context: The behave context object.
 
     """
-    context.exit_code = main(["non_existent_pyproject.toml"])
+    _run_sort_deps(context, ["gtk-sort-deps", "non_existent_pyproject.toml"])
 
 
 @then("the file should be updated to:")
@@ -68,8 +66,18 @@ def step_then_file_updated(context: Context) -> None:
 
     """
     assert context.text is not None
+    assert context.target_file is not None
     actual_content = context.target_file.read_text(encoding="utf-8")
-    assert actual_content == context.text
+    diff = "\n".join(
+        difflib.unified_diff(
+            context.text.splitlines(),
+            actual_content.splitlines(),
+            fromfile="expected",
+            tofile="actual",
+            lineterm="",
+        ),
+    )
+    assert actual_content == context.text, f"File content mismatch:\n{diff}"
 
 
 @then("the file content should remain unchanged")
@@ -80,27 +88,18 @@ def step_then_file_unchanged(context: Context) -> None:
         context: The behave context object.
 
     """
+    assert context.target_file is not None
     actual_content = context.target_file.read_text(encoding="utf-8")
-    assert actual_content == context.original_content
-
-
-@then("the hook should exit with failure")
-def step_then_exit_failure(context: Context) -> None:
-    """Verify that the hook returned exit code 1.
-
-    Args:
-        context: The behave context object.
-
-    """
-    assert context.exit_code == 1
-
-
-@then("the hook should exit with success")
-def step_then_exit_success(context: Context) -> None:
-    """Verify that the hook returned exit code 0.
-
-    Args:
-        context: The behave context object.
-
-    """
-    assert context.exit_code == 0
+    original = str(context.original_content)
+    diff = "\n".join(
+        difflib.unified_diff(
+            original.splitlines(),
+            actual_content.splitlines(),
+            fromfile="original",
+            tofile="actual",
+            lineterm="",
+        ),
+    )
+    assert actual_content == context.original_content, (
+        f"File was unexpectedly modified:\n{diff}"
+    )
