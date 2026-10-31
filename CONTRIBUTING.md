@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for your interest in contributing to AWS Glue pre-commit hooks. This guide covers local environment setup, development workflow, and pull request expectations.
+Thank you for your interest in contributing to Awesome Glue pre-commit hooks. This guide covers local environment setup, development workflow, and pull request expectations.
 
 ## Prerequisites
 
@@ -26,7 +26,7 @@ uv sync --group dev
 uv run pre-commit install
 ```
 
-## Making changes
+## Making Changes
 
 1. Create a feature branch: `git checkout -b feat/my-new-hook`
 2. Add your hook implementation under `src/gtk_pre_commit/`.
@@ -34,29 +34,34 @@ uv run pre-commit install
    - `pyproject.toml` under `[project.scripts]`
    - `.pre-commit-hooks.yaml`
    - `README.md` under `## Hooks`
-4. Add unit and integration tests under `tests/`.
-5. Run lint and format checks across all files:
+4. Add BDD scenarios and step definitions under `features/`.
+5. Run lint and formatting checks across all files:
 
    ```bash
    just lint
    ```
 
-   *(Runs all pre-commit hooks: Ruff formatting & linting, Bandit security checks, YAML/TOML validators, Codespell).*
-
 6. Run the test suite and verify 100% test coverage:
 
    ```bash
-   just test-cov
+   just coverage
    ```
 
-## Code style
+7. Test hook execution within an isolated pre-commit environment:
+
+   ```bash
+   uv run pre-commit try-repo . <hook-id> --all-files
+   ```
+
+## Code Style
 
 This project enforces strict code quality standards configured in `pyproject.toml`:
 - **Line length:** 79 characters (PEP 8).
-- **Docstrings:** Required on all modules, functions, classes, and test cases (`pydocstyle`).
-- **Typing:** Fully type-annotated (`mypy` strict mode).
+- **Docstrings:** Required on all modules, functions, classes, and step definitions (`pydocstyle` Google convention).
+- **Typing:** Fully type-annotated (`mypy` and `pyright` strict modes).
+- **Coverage:** 100% branch and line coverage enforced.
 
-## Commit messages
+## Commit Messages
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) for commit subjects, for example:
 
@@ -67,13 +72,13 @@ docs: document new hook in README
 test: add coverage for error handling
 ```
 
-## Pull requests
+## Pull Requests
 
 - Keep pull requests focused on a single concern.
-- Ensure `just lint` and `just test-cov` pass before requesting review.
+- Ensure `just lint` and `just coverage` pass before requesting review.
 - Use a Conventional Commits title for your pull request.
 
-## Code of conduct
+## Code of Conduct
 
 Follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
