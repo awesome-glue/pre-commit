@@ -9,6 +9,10 @@ from pathlib import Path
 from gtk_pre_commit.utils import find_gtk_project_files, pre_commit_hook
 
 ARTIFACT_PATTERNS: tuple[str, ...] = ("*.dependencies.zip", "*.gluewheels.zip")
+_ERR_MISSING_GTK: tuple[str, ...] = (
+    "Error: 'aws-glue-toolkit' is not installed.",
+    "Add 'additional_dependencies: [aws-glue-toolkit]' to hook config.",
+)
 
 
 def _check_build(gtk_bin: str, job_dir: Path, flags: Sequence[str]) -> bool:
@@ -50,12 +54,7 @@ def main(flags: Sequence[str], files: Sequence[str]) -> int:
 
     """
     if (gtk_bin := shutil.which("gtk")) is None:
-        print(  # noqa: T201
-            "Error: 'aws-glue-toolkit' is not installed in the hook "
-            "environment.\nPlease configure 'additional_dependencies: "
-            "[aws-glue-toolkit]' in .pre-commit-config.yaml.",
-            file=sys.stderr,
-        )
+        print(*_ERR_MISSING_GTK, sep="\n", file=sys.stderr)  # noqa: T201
         return 1
 
     failed_dirs = [
