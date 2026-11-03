@@ -2,12 +2,16 @@
 
 from collections.abc import Iterable, Iterator, Sequence
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import tomlkit
-from tomlkit.items import Array, Item
+from tomlkit.items import Array
 from tomlkit.toml_document import TOMLDocument
 
 from gtk_pre_commit.utils import find_gtk_project_files, pre_commit_hook
+
+if TYPE_CHECKING:
+    from tomlkit.items import Item
 
 TARGET_KEY_PATHS: tuple[tuple[str, ...], ...] = (
     ("project", "dependencies"),
@@ -37,7 +41,9 @@ def _iter_target_arrays(
     for key_path in targets:
         node: TOMLDocument | Item | None = doc
         for key in key_path:
-            node = node.get(key) if isinstance(node, dict) else None
+            node = (
+                node[key] if isinstance(node, dict) and key in node else None
+            )
         if isinstance(node, Array):
             yield node
 
@@ -51,7 +57,7 @@ def _sort_array(array: Array) -> None:
     """
     groups = [
         group
-        for group in array._value  # noqa: SLF001
+        for group in array._value  # noqa: SLF001 # pyright: ignore[reportPrivateUsage]
         if group.value is not None
     ]
     sorted_items = sorted(
@@ -97,7 +103,7 @@ def _sort_file_dependencies(paths: Iterable[Path]) -> Iterator[Path]:
     for path in paths:
         original = path.read_text(encoding="utf-8")
         if (sorted_content := sort_dependencies(original)) != original:
-            path.write_text(sorted_content, encoding="utf-8")
+            _ = path.write_text(sorted_content, encoding="utf-8")
             yield path
 
 
