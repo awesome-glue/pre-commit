@@ -8,7 +8,7 @@ build-backend = "uv_build"
 
 [project]
 name = "gtk-pre-commit"
-version = "0.0.0"
+version = "0.1.0"
 description = "Pre-commit hooks for the Awesome Glue ecosystem."
 readme = "README.md"
 requires-python = ">=3.11"
